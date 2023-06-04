@@ -1,0 +1,57 @@
+version: '3.7'
+
+services:
+  mongo1:
+    container_name: mongo1
+    image: mongo:4.2.3
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_ADMIN_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_ADMIN_PASSWORD}
+    ports:
+    - 27017:27017
+    command: mongod --auth --keyFile /opt/key/replica.key --replSet rs0 --bind_ip_all
+    restart: always
+    networks:
+      - mongo-net
+    volumes:
+      - mongo-data:/data/db
+      - ./scripts/file.key:/opt/key/replica.key
+
+  mongo2:
+    container_name: mongo2
+    image: mongo:4.2.3
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_ADMIN_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_ADMIN_PASSWORD}
+    ports:
+    - 27018:27017
+    command: mongod --auth --keyFile /opt/key/replica.key --replSet rs0 --bind_ip_all
+    restart: always
+    networks:
+      - mongo-net
+    volumes:
+      - mongo-data-2:/data/db
+      - ./scripts/file.key:/opt/key/replica.key
+  mongo3:
+    container_name: mongo3
+    image: mongo:4.2.3
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_ADMIN_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_ADMIN_PASSWORD}
+    ports:
+    - 27019:27017
+    command: mongod --auth --keyFile /opt/key/replica.key --replSet rs0 --bind_ip_all
+    restart: always
+    networks:
+      - mongo-net
+    volumes:
+      - mongo-data-3:/data/db
+      - ./scripts/file.key:/opt/key/replica.key
+volumes:
+  mongo-data:
+  mongo-data-2:
+  mongo-data-3:
+
+networks:
+  mongo-net:
+    name: mongo-net
