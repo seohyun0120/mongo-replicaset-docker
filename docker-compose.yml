@@ -1,50 +1,98 @@
 version: '3.7'
+
+services:
+  mongo1:
+    image: mongo:4.2.3
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_ADMIN_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_ADMIN_PASSWORD}
+    ports:
+    - 27017:27017
+    command: mongod --auth --keyFile /data/key/replica.key --replSet rs0 --bind_ip_all
+    secrets:
+      - source: replica-key
+        target: /data/key/replica.key
+        uid: '999'
+        gid: '999'
+        mode: 0400
+    networks:
+      - mongo-net
+    volumes:
+      - mongo-data:/data/db
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.name == db
+      restart_policy:
+        condition: on-failure
+
+  mongo2:
+    image: mongo:4.2.3
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_ADMIN_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_ADMIN_PASSWORD}
+    ports:
+    - 27017:27017
+    command: mongod --auth --keyFile /data/key/replica.key --replSet rs0 --bind_ip_all
+    secrets:
+      - source: replica-key
+        target: /data/key/replica.key
+        uid: '999'
+        gid: '999'
+        mode: 0400
+    networks:
+      - mongo-net
+    volumes:
+      - mongo-data-2:/data/db
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.name == db2
+      restart_policy:
+        condition: on-failure
+  mongo3:
+    image: mongo:4.2.3
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_ADMIN_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_ADMIN_PASSWORD}
+    ports:
+    - 27017:27017
+    command: mongod --auth --keyFile /data/key/replica.key --replSet rs0 --bind_ip_all
+    secrets:
+      - source: replica-key
+        target: /data/key/replica.key
+        uid: '999'
+        gid: '999'
+        mode: 0400
+    networks:
+      - mongo-net
+    volumes:
+      - mongo-data-3:/data/db
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.name == db3
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  mongo-data:
+    external: true
+  mongo-data-2:
+    external: true
+  mongo-data-3:
+    external: true
+
 networks:
   mongo-net:
     name: mongo-net
-services:
-  mongo3:
-    hostname: mongo3
-    container_name: mongo3
-    image: mongo:4.2.3
-    entrypoint: [ "/usr/bin/mongod", "--keyFile", "/data/file.key", "--replSet", "rs", "--journal", "--bind_ip_all" ]
-    ports:
-    - "27018:27017"
-    restart: always
-    networks:
-      - mongo-net
-    volumes:
-    - "./scripts/file.key:/data/fle.key"
 
-  mongo2:
-    hostname: mongo2
-    container_name: mongo2
-    image: mongo:4.2.3
-    entrypoint: [ "/usr/bin/mongod", "--keyFile", "/data/file.key", "--replSet", "rs", "--journal", "--bind_ip_all" ]
-    ports:
-    - "27019:27017"
-    restart: always
-    networks:
-      - mongo-net
-    volumes:
-      - "./scripts/file.key:/data/file.key"
-
-  mongo1:
-    hostname: mongo1
-    container_name: mongo1
-    image: mongo:4.2.3
-    command: bash -c "/usr/bin/mongod --keyFile /data/file.key --replSet rs --journal --bind_ip_all" 
-    ports:
-    - "27017:27017"
-    links:
-    - mongo2:mongo2
-    - mongo3:mongo3
-    restart: always
-    networks:
-      - mongo-net
-    volumes:
-      - "./scripts/setup.sh:/scripts/setup.sh"
-      - "./scripts/file.key:/data/file.key"
-      - mongo-data:/data/db
-volumes:
-  mongo-data:
+secrets:
+  replica-key:
+    external: true
